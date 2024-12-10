@@ -7,8 +7,9 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/0xsequence/go-libs/networks"
 	"github.com/0xsequence/go-sequence/lib/prototyp"
+
+	"github.com/0xsequence/go-libs/networks"
 )
 
 // slog.Any("error", err)

@@ -59,8 +59,6 @@ issues:
     - "bin"
     - ".buildkite"
     - "etc"
-    - "proto/clients"
-    - "tests/mock"
   exclude-files:
     - ".*\\.gen\\.go$"
     - ".*\\.ridl$"
@@ -85,7 +83,7 @@ linters-settings:
     sections:
       - standard # Standard section: captures all standard packages.
       - default # Default section: contains all imports that could not be matched to another section type.
-      - prefix(github.com/0xsequence/marketplace-api) # Custom section: groups all imports with the specified Prefix.
+      - prefix(github.com/0xsequence/go-libs) # Custom section: groups all imports with the specified Prefix.
     # Skip generated files.
     # Default: true
     skip-generated: true
