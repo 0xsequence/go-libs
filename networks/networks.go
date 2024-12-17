@@ -2,6 +2,7 @@ package networks
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/0xsequence/ethkit/ethproviders"
 )
@@ -29,6 +30,9 @@ type Network struct {
 	InternalNodeURL    string `toml:"internal_node_url"    json:"-"`
 	InternalIndexerURL string `toml:"internal_indexer_url" json:"-"`
 	InternalRelayerURL string `toml:"internal_relayer_url" json:"-"`
+
+	BlockInterval  time.Duration `toml:"block_interval"  json:"blockInterval,omitempty"`
+	BlockRetention int           `toml:"block_retention" json:"blockRetention,omitempty"`
 
 	NativeToken *Currency   `toml:"native_token" json:"nativeToken,omitempty"`
 	Currencies  []*Currency `toml:"currencies"   json:"currencies,omitempty"`
