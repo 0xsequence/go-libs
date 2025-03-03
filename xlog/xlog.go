@@ -88,6 +88,15 @@ func TokenID(tokenID prototyp.BigInt) slog.Attr {
 }
 
 // slog.String("tokenId", tokenID.String())
+func TokenIDPtr(tokenID *prototyp.BigInt) slog.Attr {
+	if tokenID != nil {
+		return TokenIDString(tokenID.String())
+	}
+
+	return TokenIDString("empty")
+}
+
+// slog.String("tokenId", tokenID.String())
 func TokenIDBigInt(tokenID big.Int) slog.Attr {
 	return TokenIDString(tokenID.String())
 }
