@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/0xsequence/go-sequence/lib/prototyp"
 
@@ -118,4 +119,25 @@ func ProjectID(projectID uint64) slog.Attr {
 
 func Stringer[T fmt.Stringer](k string, v T) slog.Attr {
 	return slog.String(k, v.String())
+}
+
+func PointerSlice[T any](key string, slice []*T) slog.Attr {
+	var b strings.Builder
+	b.WriteString("[")
+
+	for i, item := range slice {
+		if i > 0 {
+			b.WriteString(" ")
+		}
+
+		if item == nil {
+			b.WriteString("<nil>")
+		} else {
+			b.WriteString(fmt.Sprintf("&%+v", *item))
+		}
+	}
+
+	b.WriteString("]")
+
+	return slog.String(key, b.String())
 }
