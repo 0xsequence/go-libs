@@ -5,6 +5,7 @@ go 1.23.4
 require (
 	github.com/0xsequence/ethkit v1.29.7
 	github.com/0xsequence/go-sequence v0.43.6
+	github.com/test-go/testify v1.1.4
 )
 
 require (
@@ -14,6 +15,7 @@ require (
 	github.com/consensys/bavard v0.1.22 // indirect
 	github.com/consensys/gnark-crypto v0.14.0 // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.1.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/ethereum/c-kzg-4844/bindings/go v0.0.0-20230126171313-363c7d7593b4 // indirect
@@ -24,6 +26,7 @@ require (
 	github.com/goware/superr v0.0.2 // indirect
 	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
