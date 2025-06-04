@@ -12,10 +12,17 @@ import (
 )
 
 type Options struct {
-	LoggerConfig    Config
-	DebugClient     *debugger.Client
-	ServiceName     string
-	Version         string
+	LoggerConfig Config
+
+	// if the debug client is passed, then the logger would use it
+	DebugClient *debugger.Client
+
+	// if the service name is not specified, then it would add "unknown"
+	ServiceName string
+	// if the version name is not specified, then it would add "unknown"
+	Version string
+
+	// when the development is true, then the logger would use devslog
 	DevelopmentMode bool
 	DevslogOptions  *devslog.Options
 }
@@ -35,7 +42,7 @@ var defaultOptions = &Options{
 	Version:     "undefined",
 }
 
-func Logger(o *Options) *slog.Logger {
+func New(o *Options) *slog.Logger {
 	o = cmp.Or(o, defaultOptions)
 
 	handlerOptions := &slog.HandlerOptions{
