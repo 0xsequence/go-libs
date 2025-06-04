@@ -8,14 +8,14 @@ import (
 	"github.com/go-chi/traceid"
 	"github.com/golang-cz/devslog"
 
-	"github.com/0xsequence/go-libs/debugger"
+	"github.com/0xsequence/go-libs/httpdebug"
 )
 
 type Options struct {
 	LoggerConfig Config
 
 	// if the debug client is passed, then the logger would use it
-	DebugClient *debugger.Client
+	DebugClient *httpdebug.Client
 
 	// if the service name is not specified, then it would add "unknown"
 	ServiceName string

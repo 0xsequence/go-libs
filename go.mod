@@ -6,6 +6,7 @@ require (
 	github.com/0xsequence/ethkit v1.29.7
 	github.com/0xsequence/go-sequence v0.43.6
 	github.com/go-chi/traceid v0.3.0
+	github.com/go-chi/transport v0.5.0
 	github.com/golang-cz/devslog v0.0.13
 	github.com/test-go/testify v1.1.4
 )
