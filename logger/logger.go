@@ -22,9 +22,13 @@ type Options struct {
 	// if the version name is not specified, then it would add "unknown"
 	Version string
 
-	// when the development is true, then the logger would use devslog
+	// If the DevelopmentMode is true, then the logger would use devslog
 	DevelopmentMode bool
 	DevslogOptions  *devslog.Options
+
+	// If the traceid would be logged.
+	// If the DevelopmentMode is false, then traceid will be logged no matter what is value of this paramater
+	LogTraceID bool
 }
 
 type Config struct {
@@ -74,7 +78,9 @@ func New(o *Options) *slog.Logger {
 	}
 
 	// Log "traceId"
-	slogHandler = traceid.LogHandler(slogHandler)
+	if !o.DevelopmentMode || o.LogTraceID {
+		slogHandler = traceid.LogHandler(slogHandler)
+	}
 
 	if o.DebugClient != nil {
 		slogHandler = o.DebugClient.LogHandler(slogHandler)
