@@ -17,7 +17,8 @@ var (
 )
 
 type labels struct {
-	Client string `label:"client"`
+	Gen    string `label:"gen"`
+	Schema string `label:"schema"`
 	Status string `label:"status"`
 }
 
@@ -38,10 +39,13 @@ func WebrpcTelemetry(next http.Handler) http.Handler {
 			return
 		}
 
-		// marketplace-api@v25.9.1
-		schemaVersion := versions[2]
+		webrpcGen, _, _ := strings.Cut(versions[1], "@") // gen-golang@v0.19.0 -> gen-golang
+		webrpcSchema := versions[2]                      // marketplace-api@v25.9.1
 
-		httplog.SetAttrs(r.Context(), slog.String("webrpcClient", schemaVersion))
+		httplog.SetAttrs(r.Context(),
+			slog.String("webrpcGen", webrpcGen),
+			slog.String("webrpcSchema", webrpcSchema),
+		)
 
 		ww, ok := w.(middleware.WrapResponseWriter)
 		if !ok {
@@ -50,7 +54,8 @@ func WebrpcTelemetry(next http.Handler) http.Handler {
 
 		defer func() {
 			requestsTotal.Inc(labels{
-				Client: schemaVersion,
+				Gen:    webrpcGen,
+				Schema: webrpcSchema,
 				Status: strconv.Itoa(ww.Status()),
 			})
 		}()
