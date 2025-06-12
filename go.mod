@@ -5,6 +5,10 @@ go 1.23.4
 require (
 	github.com/0xsequence/ethkit v1.29.7
 	github.com/0xsequence/go-sequence v0.43.6
+	github.com/go-chi/httplog/v3 v3.1.0
+	github.com/go-chi/traceid v0.3.0
+	github.com/go-chi/transport v0.5.0
+	github.com/golang-cz/devslog v0.0.13
 	github.com/test-go/testify v1.1.4
 )
 
@@ -19,6 +23,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
 	github.com/ethereum/c-kzg-4844/bindings/go v0.0.0-20230126171313-363c7d7593b4 // indirect
+	github.com/go-chi/chi/v5 v5.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/goware/breaker v0.1.2 // indirect
