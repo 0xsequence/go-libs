@@ -21,7 +21,7 @@ type Options struct {
 	// Version specifies the service version. Defaults to "unknown" if not set
 	Version string
 
-	// use httpdebug header in logging
+	// Use httpdebug header in logging
 	HTTPDebug *httpdebug.Header
 }
 
@@ -37,8 +37,8 @@ var defaultOptions = &Options{
 		Level:  slog.LevelInfo,
 		Pretty: false,
 	},
-	ServiceName: "undefined",
-	Version:     "undefined",
+	ServiceName: "unknown",
+	Version:     "unknown",
 }
 
 func New(o *Options) *slog.Logger {
@@ -77,8 +77,8 @@ func New(o *Options) *slog.Logger {
 	// in JSON mode print service and version
 	if !o.Config.Pretty {
 		logger = logger.With(
-			slog.String("service", cmp.Or(o.ServiceName, "undefined")),
-			slog.String("version", cmp.Or(o.Version, "undefined")),
+			slog.String("service", cmp.Or(o.ServiceName, "unknown")),
+			slog.String("version", cmp.Or(o.Version, "unknown")),
 		)
 	}
 
