@@ -6,14 +6,17 @@ import (
 	"github.com/go-chi/transport"
 )
 
-func (c *Client) Transport(next http.RoundTripper) http.RoundTripper {
-	return transport.RoundTripFunc(func(req *http.Request) (res *http.Response, err error) {
-		r := transport.CloneRequest(req)
+// Transport propagates debug mode by adding the given debug header to outgoing
+// requests, if enabled in the context.
+func Transport(debugHeader Header) func(next http.RoundTripper) http.RoundTripper {
+	return func(next http.RoundTripper) http.RoundTripper {
+		return transport.RoundTripFunc(func(r *http.Request) (*http.Response, error) {
+			if isDebugModeEnabled(r.Context()) {
+				r = transport.CloneRequest(r)
+				r.Header.Set(debugHeader.Key, debugHeader.Value)
+			}
 
-		if val := r.Context().Value(ctxKey{}); val != nil {
-			r.Header.Set(c.cfg.Header, c.cfg.Password)
-		}
-
-		return next.RoundTrip(r)
-	})
+			return next.RoundTrip(r)
+		})
+	}
 }

@@ -5,30 +5,21 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/go-chi/traceid"
 	"github.com/golang-cz/devslog"
-
-	"github.com/0xsequence/go-libs/httpdebug"
 )
 
 type Options struct {
 	LoggerConfig Config
 
-	// if the debug client is passed, then the logger would use it
-	DebugClient *httpdebug.Client
+	LogHandlers []func(slog.Handler) slog.Handler
 
-	// if the service name is not specified, then it would add "unknown"
+	// ServiceName specifies the service name. Defaults to "unknown" if not set
 	ServiceName string
-	// if the version name is not specified, then it would add "unknown"
+	// Version specifies the service version. Defaults to "unknown" if not set
 	Version string
 
-	// If the DevelopmentMode is true, then the logger would use devslog
-	DevelopmentMode bool
-	DevslogOptions  *devslog.Options
-
-	// If the traceid would be logged.
-	// If the DevelopmentMode is false, then traceid will be logged no matter what is value of this paramater
-	LogTraceID bool
+	// If JSON is true, use JSON logger. Use pretty logger otherwise.
+	JSON bool
 }
 
 type Config struct {
@@ -55,40 +46,27 @@ func New(o *Options) *slog.Logger {
 	}
 
 	var slogHandler slog.Handler
-	if o.DevelopmentMode && !o.LoggerConfig.JSON {
+	if o.JSON && !o.LoggerConfig.JSON {
 		// Pretty logger for localhost development.
-		o.DevslogOptions = cmp.Or(
-			o.DevslogOptions,
-			&devslog.Options{
-				// default options, if user doesn't send options
-				MaxSlicePrintSize: 20,
-				SortKeys:          true,
-				TimeFormat:        "[15:04:05.000]",
-				StringerFormatter: true,
-			},
-		)
-
-		// apply handler options to devslog options
-		o.DevslogOptions.HandlerOptions = handlerOptions
-
-		slogHandler = devslog.NewHandler(os.Stdout, o.DevslogOptions)
+		slogHandler = devslog.NewHandler(os.Stdout, &devslog.Options{
+			MaxSlicePrintSize: 20,
+			SortKeys:          true,
+			TimeFormat:        "[15:04:05.000]",
+			StringerFormatter: true,
+			HandlerOptions:    handlerOptions,
+		})
 	} else {
 		// JSON logger for production
 		slogHandler = slog.NewJSONHandler(os.Stdout, handlerOptions)
 	}
 
-	// Log "traceId"
-	if !o.DevelopmentMode || o.LogTraceID {
-		slogHandler = traceid.LogHandler(slogHandler)
-	}
-
-	if o.DebugClient != nil {
-		slogHandler = o.DebugClient.LogHandler(slogHandler)
+	for _, handler := range o.LogHandlers {
+		slogHandler = handler(slogHandler)
 	}
 
 	logger := slog.New(slogHandler)
 
-	if !o.DevelopmentMode {
+	if !o.JSON {
 		logger.With(
 			slog.String("service", cmp.Or(o.ServiceName, "undefined")),
 			slog.String("version", cmp.Or(o.Version, "undefined")),
