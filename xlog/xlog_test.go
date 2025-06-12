@@ -146,20 +146,20 @@ func TestTokenIDBigInt(t *testing.T) {
 	assert.Equal(t, tokenID.String(), attr.Value.String())
 }
 
-func TestEntity(t *testing.T) {
-	entity := "sampleEntity"
-	attr := xlog.Entity(entity)
+func TestDataSource(t *testing.T) {
+	source := "sampleSource"
+	attr := xlog.DataSource(source)
 
-	assert.Equal(t, "entity", attr.Key)
-	assert.Equal(t, entity, attr.Value.String())
+	assert.Equal(t, "dataSource", attr.Key)
+	assert.Equal(t, source, attr.Value.String())
 }
 
-func TestSource(t *testing.T) {
-	source := "sampleSource"
-	attr := xlog.Source(source)
+func TestDataType(t *testing.T) {
+	dataType := "currency"
+	attr := xlog.DataType(dataType)
 
-	assert.Equal(t, "source", attr.Key)
-	assert.Equal(t, source, attr.Value.String())
+	assert.Equal(t, "dataType", attr.Key)
+	assert.Equal(t, dataType, attr.Value.String())
 }
 
 func TestProjectID(t *testing.T) {
