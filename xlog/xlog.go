@@ -102,14 +102,14 @@ func TokenIDBigInt(tokenID big.Int) slog.Attr {
 	return TokenIDString(tokenID.String())
 }
 
-// slog.String("entity", tokenID.String())
-func Entity(entity string) slog.Attr {
-	return slog.String("entity", entity)
+// slog.String("dataType", "currency")
+func DataType(dataType string) slog.Attr {
+	return slog.String("dataType", dataType)
 }
 
-// slog.String("source", source)
-func Source(source string) slog.Attr {
-	return slog.String("source", source)
+// slog.String("dataSource", source)
+func DataSource(dataSource string) slog.Attr {
+	return slog.String("dataSource", dataSource)
 }
 
 // slog.Uint64("projectId", projectID)
