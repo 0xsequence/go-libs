@@ -4,12 +4,11 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog/v3"
 	"github.com/go-chi/metrics"
-
-	"github.com/0xsequence/marketplace-api/lib/status/proto"
 )
 
 var (
@@ -26,15 +25,23 @@ type labels struct {
 // logs it to request log for traceability, and collects usage metrics for API analytics.
 func WebrpcTelemetry(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		version, err := proto.VersionFromHeader(r.Header)
-		if err != nil {
+		webrpcHeader := r.Header.Get("Webrpc")
+		if webrpcHeader == "" {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		webrpcClient := version.SchemaName + "@" + version.SchemaVersion
+		// Webrpc: webrpc@v0.25.1;gen-golang@v0.19.0;marketplace-api@v25.9.1;...
+		versions := strings.Split(webrpcHeader, ";")
+		if len(versions) < 3 {
+			next.ServeHTTP(w, r)
+			return
+		}
 
-		httplog.SetAttrs(r.Context(), slog.String("webrpcClient", webrpcClient))
+		// marketplace-api@v25.9.1
+		schemaVersion := versions[2]
+
+		httplog.SetAttrs(r.Context(), slog.String("webrpcClient", schemaVersion))
 
 		ww, ok := w.(middleware.WrapResponseWriter)
 		if !ok {
@@ -43,7 +50,7 @@ func WebrpcTelemetry(next http.Handler) http.Handler {
 
 		defer func() {
 			requestsTotal.Inc(labels{
-				Client: webrpcClient,
+				Client: schemaVersion,
 				Status: strconv.Itoa(ww.Status()),
 			})
 		}()
