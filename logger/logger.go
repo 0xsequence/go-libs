@@ -5,33 +5,37 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/go-chi/httplog/v3"
+	"github.com/go-chi/traceid"
 	"github.com/golang-cz/devslog"
+
+	"github.com/0xsequence/go-libs/httpdebug"
 )
 
 type Options struct {
-	LoggerConfig Config
-
-	LogHandlers []func(slog.Handler) slog.Handler
+	Config Config
 
 	// ServiceName specifies the service name. Defaults to "unknown" if not set
 	ServiceName string
+
 	// Version specifies the service version. Defaults to "unknown" if not set
 	Version string
 
-	// If JSON is true, use JSON logger. Use pretty logger otherwise.
-	JSON bool
+	// use httpdebug header in logging
+	HTTPDebug *httpdebug.Header
 }
 
+// Config can be used directly in toml config
 type Config struct {
 	Level   slog.Level `toml:"level"`
-	JSON    bool       `toml:"json"`
 	Concise bool       `toml:"concise"`
+	Pretty  bool       `toml:"pretty"`
 }
 
 var defaultOptions = &Options{
-	LoggerConfig: Config{
-		Level: slog.LevelInfo,
-		JSON:  true,
+	Config: Config{
+		Level:  slog.LevelInfo,
+		Pretty: false,
 	},
 	ServiceName: "undefined",
 	Version:     "undefined",
@@ -41,12 +45,13 @@ func New(o *Options) *slog.Logger {
 	o = cmp.Or(o, defaultOptions)
 
 	handlerOptions := &slog.HandlerOptions{
-		AddSource: true,
-		Level:     o.LoggerConfig.Level,
+		AddSource:   true,
+		Level:       o.Config.Level,
+		ReplaceAttr: httplog.SchemaGCP.Concise(o.Config.Concise).ReplaceAttr,
 	}
 
 	var slogHandler slog.Handler
-	if o.JSON && !o.LoggerConfig.JSON {
+	if o.Config.Pretty {
 		// Pretty logger for localhost development.
 		slogHandler = devslog.NewHandler(os.Stdout, &devslog.Options{
 			MaxSlicePrintSize: 20,
@@ -60,14 +65,18 @@ func New(o *Options) *slog.Logger {
 		slogHandler = slog.NewJSONHandler(os.Stdout, handlerOptions)
 	}
 
-	for _, handler := range o.LogHandlers {
-		slogHandler = handler(slogHandler)
+	// add traceid handler
+	slogHandler = traceid.LogHandler(slogHandler)
+
+	if o.HTTPDebug != nil && o.HTTPDebug.Key != "" && o.HTTPDebug.Value != "" {
+		slogHandler = httpdebug.LogHandler(*o.HTTPDebug)(slogHandler)
 	}
 
 	logger := slog.New(slogHandler)
 
-	if !o.JSON {
-		logger.With(
+	// in JSON mode print service and version
+	if !o.Config.Pretty {
+		logger = logger.With(
 			slog.String("service", cmp.Or(o.ServiceName, "undefined")),
 			slog.String("version", cmp.Or(o.Version, "undefined")),
 		)

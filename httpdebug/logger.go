@@ -22,7 +22,7 @@ type debugHandler struct {
 }
 
 func (h *debugHandler) Enabled(ctx context.Context, level slog.Level) bool {
-	if isDebugModeEnabled(ctx) {
+	if IsDebugModeEnabled(ctx) {
 		return true
 	}
 

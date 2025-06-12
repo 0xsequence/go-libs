@@ -33,6 +33,10 @@ github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 h1:rpfIENRNNilwHwZeG5+P150SMrnN
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0/go.mod h1:v57UDF4pDQJcEfFUCRop3lJL149eHGSe9Jvczhzjo/0=
 github.com/ethereum/c-kzg-4844/bindings/go v0.0.0-20230126171313-363c7d7593b4 h1:B2mpK+MNqgPqk2/KNi1LbqwtZDy5F7iy0mynQiBr8VA=
 github.com/ethereum/c-kzg-4844/bindings/go v0.0.0-20230126171313-363c7d7593b4/go.mod h1:y4GA2JbAUama1S4QwYjC2hefgGLU8Ul0GMtL/ADMF1c=
+github.com/go-chi/chi/v5 v5.1.0 h1:acVI1TYaD+hhedDJ3r54HyA6sExp3HfXq7QWEEY/xMw=
+github.com/go-chi/chi/v5 v5.1.0/go.mod h1:DslCQbL2OYiznFReuXYUmQ2hGd1aDpCnlMNITLSKoi8=
+github.com/go-chi/httplog/v3 v3.1.0 h1:j+tMqfljg9HCN82Te9GWjx9H8gc7Cmugqfen2bubUvA=
+github.com/go-chi/httplog/v3 v3.1.0/go.mod h1:N/J1l5l1fozUrqIVuT8Z/HzNeSy8TF2EFyokPLe6y2w=
 github.com/go-chi/traceid v0.3.0 h1:BYITxMnIeQasU7/U7+InZWANWxVZeCUBGTAqWleQOeg=
 github.com/go-chi/traceid v0.3.0/go.mod h1:XFfEEYZjqgML4ySh+wYBU29eqJkc2um7oEzgIc63e74=
 github.com/go-chi/transport v0.5.0 h1:xpnYcIOpBRrduJD68gX9YxkJouRGIE1y+rK5yGYnMXE=

@@ -11,7 +11,7 @@ import (
 func Transport(debugHeader Header) func(next http.RoundTripper) http.RoundTripper {
 	return func(next http.RoundTripper) http.RoundTripper {
 		return transport.RoundTripFunc(func(r *http.Request) (*http.Response, error) {
-			if isDebugModeEnabled(r.Context()) {
+			if IsDebugModeEnabled(r.Context()) {
 				r = transport.CloneRequest(r)
 				r.Header.Set(debugHeader.Key, debugHeader.Value)
 			}
