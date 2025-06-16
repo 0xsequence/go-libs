@@ -6,8 +6,8 @@ require (
 	github.com/0xsequence/ethkit v1.29.7
 	github.com/0xsequence/go-sequence v0.43.6
 	github.com/go-chi/chi/v5 v5.2.1
-	github.com/go-chi/httplog/v3 v3.1.0
-	github.com/go-chi/metrics v0.0.1
+	github.com/go-chi/httplog/v3 v3.2.0
+	github.com/go-chi/metrics v0.0.2
 	github.com/go-chi/traceid v0.3.0
 	github.com/go-chi/transport v0.5.0
 	github.com/golang-cz/devslog v0.0.15
@@ -37,15 +37,15 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.22.0 // indirect
-	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.62.0 // indirect
-	github.com/prometheus/procfs v0.15.1 // indirect
+	github.com/prometheus/client_model v0.6.2 // indirect
+	github.com/prometheus/common v0.64.0 // indirect
+	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
-	google.golang.org/protobuf v1.36.5 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
