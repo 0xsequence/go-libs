@@ -10,7 +10,7 @@ require (
 	github.com/go-chi/metrics v0.0.1
 	github.com/go-chi/traceid v0.3.0
 	github.com/go-chi/transport v0.5.0
-	github.com/golang-cz/devslog v0.0.13
+	github.com/golang-cz/devslog v0.0.15
 	github.com/test-go/testify v1.1.4
 )
 
