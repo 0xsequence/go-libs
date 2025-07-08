@@ -153,7 +153,6 @@ func (n Networks) EthProvidersConfig() ethproviders.Config {
 			URL:       network.NodeURL,
 			WSEnabled: network.WSEnabled,
 			WSURL:     network.WSURL,
-			AuthChain: network.AuthChain,
 			Testnet:   network.IsTesnet(),
 			Disabled:  network.Disabled,
 		}
