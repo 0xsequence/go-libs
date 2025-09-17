@@ -93,3 +93,16 @@ func New(o *Options) *slog.Logger {
 
 	return logger
 }
+
+type MigrationLogger struct {
+	*slog.Logger
+}
+
+func (l MigrationLogger) Printf(format string, v ...interface{}) {
+	l.Logger.Info(fmt.Sprintf(format, v...))
+}
+
+func (l MigrationLogger) Fatalf(format string, v ...interface{}) {
+	l.Logger.Error(fmt.Sprintf(format, v...))
+}
+
