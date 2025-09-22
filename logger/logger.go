@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/traceid"
 	"github.com/golang-cz/devslog"
 
+	"github.com/0xsequence/go-libs/endpointlogger"
 	"github.com/0xsequence/go-libs/httpdebug"
 )
 
@@ -67,6 +68,9 @@ func New(o *Options) *slog.Logger {
 
 	// add traceid handler
 	slogHandler = traceid.LogHandler(slogHandler)
+
+	// add endpoint logger handler
+	slogHandler = endpointlogger.LogHandler(slogHandler)
 
 	if o.HTTPDebug != nil && o.HTTPDebug.Key != "" && o.HTTPDebug.Value != "" {
 		slogHandler = httpdebug.LogHandler(*o.HTTPDebug)(slogHandler)
