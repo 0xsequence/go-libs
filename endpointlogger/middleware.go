@@ -12,22 +12,18 @@ func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
-		i := strings.LastIndex(path, "/")
 		var endpoint, service string
-		if i > 0 {
-			endpoint = path[i+1:]
-
-			// look for segment before last
-			j := strings.LastIndex(path[:i], "/")
-			if j == -1 {
-				service = path[:i]
-			} else {
-				service = path[j+1 : i]
+		parts := strings.Split(path, "/")
+		if len(parts) > 3 {
+			// check if the path is in webrpc format, and if so, then extract the service and endpoint
+			if parts[len(parts)-3] == "rpc" {
+				service = parts[len(parts)-2]
+				endpoint = parts[len(parts)-1]
 			}
-		}
 
-		if endpoint != "" && service != "" {
-			r = r.WithContext(setValues(r.Context(), service, endpoint, time.Now().UTC()))
+			if endpoint != "" && service != "" {
+				r = r.WithContext(setValues(r.Context(), service, endpoint, time.Now().UTC()))
+			}
 		}
 
 		next.ServeHTTP(w, r)
