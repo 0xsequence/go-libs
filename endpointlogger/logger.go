@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Deprecated: LogHandler is experimental and might be removed in near future. Use with caution.
 // LogHandler creates a new slog handler that will add "service", "endpoint" and "since" attributes to logs
 func LogHandler(handler slog.Handler) slog.Handler {
 	return &endpointHandler{
