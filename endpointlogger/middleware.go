@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Middleware parse webrcp "service" "name" and endpoint name and adds it to context,
+// Middleware captures webrpc service and endpoint name to a context
 // also adds "since" so logs will have attribute when the log happened since received request to server
 func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
