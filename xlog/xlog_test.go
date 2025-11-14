@@ -10,7 +10,6 @@ import (
 	"github.com/0xsequence/go-sequence/lib/prototyp"
 	"github.com/test-go/testify/assert"
 
-	"github.com/0xsequence/go-libs/networks"
 	"github.com/0xsequence/go-libs/xlog"
 )
 
@@ -62,17 +61,6 @@ func TestChainNetworkName(t *testing.T) {
 
 	assert.Equal(t, "name", attr.Key)
 	assert.Equal(t, name, attr.Value.String())
-}
-
-func TestChainIDNetwork(t *testing.T) {
-	network := &networks.Network{
-		ChainID: 12345,
-		Name:    "NetworkName",
-	}
-	attr := xlog.ChainIDNetwork(network)
-
-	assert.Equal(t, "network", attr.Key)
-	// assert individual fields (this is a bit dependent on how you handle logging with slog)
 }
 
 func TestContractAddress(t *testing.T) {

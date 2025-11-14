@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"github.com/0xsequence/go-sequence/lib/prototyp"
-
-	"github.com/0xsequence/go-libs/networks"
 )
 
 // slog.Any("error", err)
@@ -42,20 +40,6 @@ func ChainIDString(chainID string) slog.Attr {
 // slog.String("name", name)
 func ChainNetworkName(name string) slog.Attr {
 	return slog.String("name", name)
-}
-
-// slog.Group("network", ChainID(network.ChainID), ChainNetworkName(network.Name))
-func ChainIDNetwork(network *networks.Network) slog.Attr {
-	if network == nil {
-		return slog.Group("network",
-			ChainNetworkName("unknown"),
-		)
-	}
-
-	return slog.Group("network",
-		ChainID(network.ChainID),
-		ChainNetworkName(network.Name),
-	)
 }
 
 // slog.String("contractAddress", contractAddress.String())
