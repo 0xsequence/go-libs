@@ -7,10 +7,6 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-
-	"github.com/0xsequence/go-sequence/lib/prototyp"
-
-	"github.com/0xsequence/go-libs/networks"
 )
 
 // slog.Any("error", err)
@@ -44,35 +40,6 @@ func ChainNetworkName(name string) slog.Attr {
 	return slog.String("name", name)
 }
 
-// slog.Group("network", ChainID(network.ChainID), ChainNetworkName(network.Name))
-func ChainIDNetwork(network *networks.Network) slog.Attr {
-	if network == nil {
-		return slog.Group("network",
-			ChainNetworkName("unknown"),
-		)
-	}
-
-	return slog.Group("network",
-		ChainID(network.ChainID),
-		ChainNetworkName(network.Name),
-	)
-}
-
-// slog.String("contractAddress", contractAddress.String())
-func ContractAddress(contractAddress prototyp.Hash) slog.Attr {
-	return slog.String("contractAddress", contractAddress.String())
-}
-
-// slog.String("collectionAddress", collectionAddress.String())
-func CollectionAddress(collectionAddress prototyp.Hash) slog.Attr {
-	return slog.String("collectionAddress", collectionAddress.String())
-}
-
-// slog.String("currencyAddress", currencyAddress.String())
-func CurrencyAddress(currencyAddress prototyp.Hash) slog.Attr {
-	return slog.String("currencyAddress", currencyAddress.String())
-}
-
 // slog.String("orderID", orderID)
 func OrderID(orderID string) slog.Attr {
 	return slog.String("orderID", orderID)
@@ -81,20 +48,6 @@ func OrderID(orderID string) slog.Attr {
 // slog.String("tokenId", tokenID)
 func TokenIDString(tokenID string) slog.Attr {
 	return slog.String("tokenId", tokenID)
-}
-
-// slog.String("tokenId", tokenID.String())
-func TokenID(tokenID prototyp.BigInt) slog.Attr {
-	return TokenIDString(tokenID.String())
-}
-
-// slog.String("tokenId", tokenID.String())
-func TokenIDPtr(tokenID *prototyp.BigInt) slog.Attr {
-	if tokenID != nil {
-		return TokenIDString(tokenID.String())
-	}
-
-	return TokenIDString("empty")
 }
 
 // slog.String("tokenId", tokenID.String())

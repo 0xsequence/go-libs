@@ -7,10 +7,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/0xsequence/go-sequence/lib/prototyp"
 	"github.com/test-go/testify/assert"
 
-	"github.com/0xsequence/go-libs/networks"
 	"github.com/0xsequence/go-libs/xlog"
 )
 
@@ -64,41 +62,6 @@ func TestChainNetworkName(t *testing.T) {
 	assert.Equal(t, name, attr.Value.String())
 }
 
-func TestChainIDNetwork(t *testing.T) {
-	network := &networks.Network{
-		ChainID: 12345,
-		Name:    "NetworkName",
-	}
-	attr := xlog.ChainIDNetwork(network)
-
-	assert.Equal(t, "network", attr.Key)
-	// assert individual fields (this is a bit dependent on how you handle logging with slog)
-}
-
-func TestContractAddress(t *testing.T) {
-	address := prototyp.Hash("sampleAddress")
-	attr := xlog.ContractAddress(address)
-
-	assert.Equal(t, "contractAddress", attr.Key)
-	assert.Equal(t, address.String(), attr.Value.String())
-}
-
-func TestCollectionAddress(t *testing.T) {
-	address := prototyp.Hash("sampleCollectionAddress")
-	attr := xlog.CollectionAddress(address)
-
-	assert.Equal(t, "collectionAddress", attr.Key)
-	assert.Equal(t, address.String(), attr.Value.String())
-}
-
-func TestCurrencyAddress(t *testing.T) {
-	address := prototyp.Hash("sampleCurrencyAddress")
-	attr := xlog.CurrencyAddress(address)
-
-	assert.Equal(t, "currencyAddress", attr.Key)
-	assert.Equal(t, address.String(), attr.Value.String())
-}
-
 func TestOrderID(t *testing.T) {
 	orderID := "sampleOrderID"
 	attr := xlog.OrderID(orderID)
@@ -113,29 +76,6 @@ func TestTokenIDString(t *testing.T) {
 
 	assert.Equal(t, "tokenId", attr.Key)
 	assert.Equal(t, tokenID, attr.Value.String())
-}
-
-func TestTokenID(t *testing.T) {
-	tokenID := prototyp.NewBigIntFromDecimalString("1234567890")
-	attr := xlog.TokenID(tokenID)
-
-	assert.Equal(t, "tokenId", attr.Key)
-	assert.Equal(t, tokenID.String(), attr.Value.String())
-}
-
-func TestTokenIDPtr(t *testing.T) {
-	tokenID := prototyp.NewBigIntFromDecimalString("1234567890")
-	attr := xlog.TokenIDPtr(&tokenID)
-
-	assert.Equal(t, "tokenId", attr.Key)
-	assert.Equal(t, tokenID.String(), attr.Value.String())
-
-	// Test with nil pointer
-	var nilTokenID *prototyp.BigInt
-	attrNil := xlog.TokenIDPtr(nilTokenID)
-
-	assert.Equal(t, "tokenId", attrNil.Key)
-	assert.Equal(t, "empty", attrNil.Value.String())
 }
 
 func TestTokenIDBigInt(t *testing.T) {
