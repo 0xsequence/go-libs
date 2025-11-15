@@ -5,9 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/0xsequence/go-libs/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/test-go/testify/assert"
+
+	"github.com/0xsequence/go-libs/config"
 )
 
 func TestBasicAuth(t *testing.T) {

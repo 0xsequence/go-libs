@@ -3,8 +3,9 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/0xsequence/go-libs/config"
 	"github.com/go-chi/chi/v5/middleware"
+
+	"github.com/0xsequence/go-libs/config"
 )
 
 // BasicAuth protects routes with basic authentication. Returns 404 if credentials are not configured.
