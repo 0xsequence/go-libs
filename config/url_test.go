@@ -35,7 +35,7 @@ func TestURLUnmarshalText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var u URL
+			var u BaseURL
 			err := u.UnmarshalText([]byte(tt.input))
 			assert.NoError(t, err)
 
@@ -47,7 +47,7 @@ func TestURLUnmarshalText(t *testing.T) {
 }
 
 func TestURLCopy(t *testing.T) {
-	var u URL
+	var u BaseURL
 	err := u.UnmarshalText([]byte("http://localhost:4242"))
 	assert.NoError(t, err)
 

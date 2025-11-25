@@ -1,23 +1,28 @@
 package config
 
 import (
+	"fmt"
 	"net/url"
 )
 
-type URL struct {
+type BaseURL struct {
 	u url.URL
 }
 
-func (u *URL) UnmarshalText(text []byte) error {
-	parsed, err := url.Parse(string(text))
+func (u *BaseURL) UnmarshalText(text []byte) error {
+	str := string(text)
+	parsed, err := url.Parse(str)
 	if err != nil {
-		return err
+		return err //nolint:wrapcheck
+	}
+	if parsed.Host == "" {
+		return fmt.Errorf("host is required: %q", str)
 	}
 	u.u = *parsed
 	return nil
 }
 
-func (u *URL) URL() *url.URL {
+func (u *BaseURL) URL() *url.URL {
 	copy := new(url.URL)
 	*copy = u.u
 	return copy
