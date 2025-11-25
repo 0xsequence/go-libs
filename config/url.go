@@ -23,6 +23,9 @@ func (u *BaseURL) UnmarshalText(text []byte) error {
 }
 
 func (u *BaseURL) URL() *url.URL {
+	if u == nil || u.u.Host == "" {
+		return nil
+	}
 	copy := new(url.URL)
 	*copy = u.u
 	return copy

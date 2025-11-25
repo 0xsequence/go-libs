@@ -65,3 +65,28 @@ func TestURLCopy(t *testing.T) {
 	url3 := u.URL()
 	assert.Equal(t, "http", url3.Scheme)
 }
+
+func TestURLUninitialized(t *testing.T) {
+	// Test case where UnmarshalText was never called (url not defined in config)
+	var u BaseURL
+	parsedURL := u.URL()
+	assert.Nil(t, parsedURL, "URL() should return nil when BaseURL is uninitialized")
+}
+
+func TestURLEmptyText(t *testing.T) {
+	// Test case where UnmarshalText is called with empty text
+	var u BaseURL
+	err := u.UnmarshalText([]byte(""))
+	assert.Error(t, err, "UnmarshalText should error on empty text")
+
+	// Even if UnmarshalText fails, URL() should return nil
+	parsedURL := u.URL()
+	assert.Nil(t, parsedURL, "URL() should return nil when UnmarshalText failed")
+}
+
+func TestURLNilReceiver(t *testing.T) {
+	// Test case where receiver is nil
+	var u *BaseURL
+	parsedURL := u.URL()
+	assert.Nil(t, parsedURL, "URL() should return nil when receiver is nil")
+}
