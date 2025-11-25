@@ -3,6 +3,7 @@ module github.com/0xsequence/go-libs
 go 1.23.4
 
 require (
+	github.com/BurntSushi/toml v1.5.0
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/httplog/v3 v3.2.2
 	github.com/go-chi/metrics v0.1.0
