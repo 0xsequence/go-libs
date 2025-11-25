@@ -17,12 +17,11 @@ type Service struct {
 	DebugRequests bool `toml:"debug_requests"` // Enables HTTP request logging in CURL format.
 }
 
-// UnmarshalTOML implements custom TOML unmarshaling with validation for mutually exclusive fields.
-// The v parameter is the decoded TOML value (map[string]interface{} for tables).
-func (s *Service) UnmarshalTOML(v interface{}) error {
-	m, ok := v.(map[string]interface{})
+// UnmarshalTOML implements custom TOML unmarshaling with validation.
+func (s *Service) UnmarshalTOML(v any) error {
+	m, ok := v.(map[string]any)
 	if !ok {
-		return fmt.Errorf("expected map[string]interface{}, got %T", v)
+		return fmt.Errorf("expected map[string]any, got %T", v)
 	}
 
 	if val, ok := m["disabled"].(bool); ok {
