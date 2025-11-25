@@ -49,6 +49,10 @@ func (s *Service) UnmarshalTOML(v any) error {
 		s.DebugRequests = val
 	}
 
+	return s.Validate() //nolint:wrapcheck
+}
+
+func (s *Service) Validate() error {
 	// Validate mutually exclusive auth fields
 	switch {
 	case
@@ -57,7 +61,6 @@ func (s *Service) UnmarshalTOML(v any) error {
 		s.JWTToken != "" && s.AccessKey != "":
 		return fmt.Errorf("mutually exclusive auth fields: only one of jwt_secret, jwt_token, or access_key can be set")
 	}
-
 	return nil
 }
 
