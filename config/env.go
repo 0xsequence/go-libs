@@ -1,6 +1,4 @@
-// Package env defines our application environments (local, test, dev, staging, prod)
-// with utilities for comparison, string conversion, and text marshaling.
-package env
+package config
 
 import (
 	"fmt"
@@ -8,6 +6,8 @@ import (
 	"strings"
 )
 
+// Env defines our application environments (local, test, dev, staging, prod)
+// with utilities for comparison, string conversion, and text marshaling.
 type Env uint8
 
 const (
