@@ -38,6 +38,13 @@ func (e Env) MarshalText() ([]byte, error) {
 
 func (e *Env) UnmarshalText(text []byte) error {
 	enum := string(text)
+
+	// on empty string fallback to "local"
+	if enum == "" {
+		*e = EnvLocal
+		return nil
+	}
+
 	for i, name := range environments {
 		if enum == name {
 			*e = Env(i)
