@@ -16,6 +16,7 @@ const (
 	EnvDev
 	EnvDev2
 	EnvNext
+	EnvStg
 	EnvProd
 )
 
@@ -25,7 +26,8 @@ var environments = []string{
 	"dev",   // 2
 	"dev2",  // 3
 	"next",  // 4
-	"prod",  // 5
+	"stg",   // 5
+	"prod",  // 6
 }
 
 func (e Env) Is(envs ...Env) bool {
