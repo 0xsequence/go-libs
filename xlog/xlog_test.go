@@ -110,6 +110,14 @@ func TestProjectID(t *testing.T) {
 	assert.Equal(t, projectID, attr.Value.Uint64())
 }
 
+func TestEcosystemID(t *testing.T) {
+	ecosystemID := uint64(100)
+	attr := xlog.EcosystemID(ecosystemID)
+
+	assert.Equal(t, "ecosystemId", attr.Key)
+	assert.Equal(t, ecosystemID, attr.Value.Uint64())
+}
+
 type sampleStringer struct{}
 
 func (s sampleStringer) String() string { return "sampleString" }
