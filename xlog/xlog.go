@@ -70,6 +70,11 @@ func ProjectID(projectID uint64) slog.Attr {
 	return slog.Uint64("projectId", projectID)
 }
 
+// slog.Uint64("ecosystemId", projectID)
+func EcosystemID(ecosystemID uint64) slog.Attr {
+	return slog.Uint64("ecosystemId", ecosystemID)
+}
+
 func Stringer[T fmt.Stringer](k string, v T) slog.Attr {
 	return slog.String(k, v.String())
 }
