@@ -73,6 +73,41 @@ func TestWebrpcTelemetry(t *testing.T) {
 		assert.True(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": "enabled-test-telemetry.example"}))
 		assert.False(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": "enabled-test-telemetry.example/some/path?x=y#z"}))
 	})
+
+	t.Run("OPTIONS preflight can be skipped", func(t *testing.T) {
+		r := chi.NewRouter()
+		r.Use(metrics.Collector(metrics.CollectorOpts{
+			Host:  false,
+			Proto: true,
+			Skip: func(r *http.Request) bool {
+				return r.Method != "OPTIONS"
+			},
+		}))
+		r.Use(webrpc.Telemetry(webrpc.Opts{
+			Origin: true,
+			Skip: func(r *http.Request) bool {
+				// Typical CORS preflight signal; avoids dropping legitimate OPTIONS.
+				return r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != ""
+			},
+		}))
+		r.Get("/ok", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(422)
+		})
+		r.Handle("/metrics", metrics.Handler())
+
+		req := httptest.NewRequest(http.MethodOptions, "/ok", nil)
+		req.Header.Set("Access-Control-Request-Method", http.MethodGet)
+		req.Header.Set("Origin", "https://no-header.example/")
+		rr := httptest.NewRecorder()
+		r.ServeHTTP(rr, req)
+
+		// Handler is not invoked because chi won't route OPTIONS to GET; status isn't important here.
+
+		mfs := scrapeMetrics(t, r)
+		mf := mfs["webrpc_requests_total"]
+		// We skipped this request entirely, so there should be no series with origin/no-header.example.
+		assert.False(t, metricHasLabels(mf, map[string]string{"origin": "no-header.example"}))
+	})
 }
 
 func scrapeMetrics(t *testing.T, r http.Handler) map[string]*dto.MetricFamily {

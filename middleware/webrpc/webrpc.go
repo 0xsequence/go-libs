@@ -12,8 +12,8 @@ import (
 	"github.com/go-chi/metrics"
 )
 
-// Total number of requests versioned with Webrpc header.
-var requestsTotal = metrics.CounterWith[labels]("webrpc_requests_total", "Total number of webrpc client requests.")
+// Total number of requests.
+var requestsTotal = metrics.CounterWith[labels]("webrpc_requests_total", "Total number of webrpc requests.")
 
 type labels struct {
 	Gen    string `label:"gen"`
@@ -23,7 +23,11 @@ type labels struct {
 }
 
 type Opts struct {
-	Origin bool // Track origin label in metrics. NOTE: Cardinality grows with the number of unique origin headers.
+	// Track origin label in metrics.
+	// NOTE: Cardinality grows with the number of unique origin headers.
+	Origin bool
+
+	Skip func(r *http.Request) bool
 }
 
 // Telemetry is a middleware that extracts webrpc client information from request headers,
@@ -31,6 +35,11 @@ type Opts struct {
 func Telemetry(opts Opts) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if opts.Skip != nil && opts.Skip(r) {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			ww, ok := w.(middleware.WrapResponseWriter)
 			if !ok {
 				ww = middleware.NewWrapResponseWriter(w, r.ProtoMajor)
@@ -42,14 +51,6 @@ func Telemetry(opts Opts) func(next http.Handler) http.Handler {
 				requestsTotal.Inc(labels)
 			}()
 
-			if opts.Origin {
-				if origin := strings.TrimSpace(r.Header.Get("Origin")); origin != "" && origin != "null" {
-					if u, err := url.Parse(origin); err == nil && u.Scheme != "" && u.Host != "" {
-						labels.Origin = u.Host
-					}
-				}
-			}
-
 			webrpcGen, webrpcSchema := parseWebrpcHeader(r.Header.Get("Webrpc"))
 			if webrpcSchema != "" {
 				labels.Gen = webrpcGen
@@ -58,6 +59,14 @@ func Telemetry(opts Opts) func(next http.Handler) http.Handler {
 					slog.String("webrpcGen", webrpcGen),
 					slog.String("webrpcSchema", webrpcSchema),
 				)
+			}
+
+			if opts.Origin {
+				if origin := strings.TrimSpace(r.Header.Get("Origin")); origin != "" && origin != "null" {
+					if u, err := url.Parse(origin); err == nil && u.Scheme != "" && u.Host != "" {
+						labels.Origin = u.Host
+					}
+				}
 			}
 
 			next.ServeHTTP(ww, r)
