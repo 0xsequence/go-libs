@@ -42,10 +42,10 @@ func TestWebrpcTelemetry(t *testing.T) {
 		mf := mfs["webrpc_requests_total"]
 		assert.NotNil(t, mf)
 		assert.True(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": ""}))
-		assert.False(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": "https://disabled-test-telemetry.example"}))
+		assert.False(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": "disabled-test-telemetry.example"}))
 	})
 
-	t.Run("origin label with scheme+host only", func(t *testing.T) {
+	t.Run("origin label with host only", func(t *testing.T) {
 		r := chi.NewRouter()
 		r.Use(metrics.Collector(metrics.CollectorOpts{
 			Host:  false,
@@ -70,8 +70,8 @@ func TestWebrpcTelemetry(t *testing.T) {
 		mfs := scrapeMetrics(t, r)
 		mf := mfs["webrpc_requests_total"]
 		assert.NotNil(t, mf)
-		assert.True(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": "https://enabled-test-telemetry.example"}))
-		assert.False(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": "https://enabled-test-telemetry.example/some/path?x=y#z"}))
+		assert.True(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": "enabled-test-telemetry.example"}))
+		assert.False(t, metricHasLabels(mf, map[string]string{"status": "422", "origin": "enabled-test-telemetry.example/some/path?x=y#z"}))
 	})
 }
 

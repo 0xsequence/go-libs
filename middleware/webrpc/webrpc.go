@@ -45,7 +45,7 @@ func Telemetry(opts Opts) func(next http.Handler) http.Handler {
 			if opts.Origin {
 				if origin := strings.TrimSpace(r.Header.Get("Origin")); origin != "" && origin != "null" {
 					if u, err := url.Parse(origin); err == nil && u.Scheme != "" && u.Host != "" {
-						labels.Origin = u.Scheme + "://" + u.Host
+						labels.Origin = u.Host
 					}
 				}
 			}
