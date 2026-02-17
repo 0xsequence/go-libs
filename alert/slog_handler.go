@@ -135,40 +135,52 @@ func (h *alertHandler) WithGroup(name string) slog.Handler {
 }
 
 // buildAttrs flattens logger.With(...) attrs from the parent chain and
-// appends the current record attrs. If WithGroup was used, the final attrs are
-// wrapped into nested slog groups in the same order they were applied.
+// appends the current record attrs while preserving WithGroup nesting order.
 func (h *alertHandler) buildAttrs(record slog.Record) []slog.Attr {
 	var chain []*alertHandler
 	for cur := h; cur != nil; cur = cur.parent {
 		chain = append(chain, cur)
 	}
 
+	// levelAttrs[0] is root (ungrouped) attrs, levelAttrs[1] is attrs under
+	// groups[0], levelAttrs[2] is attrs under groups[1], etc.
 	var groups []string
-	var attrs []slog.Attr
+	levelAttrs := [][]slog.Attr{{}}
+	level := 0
 	for i := len(chain) - 1; i >= 0; i-- {
 		node := chain[i]
 		if node.localGroup != "" {
 			groups = append(groups, node.localGroup)
+			levelAttrs = append(levelAttrs, nil)
+			level++
 		}
-		attrs = append(attrs, node.localAttrs...)
-	}
-	record.Attrs(func(a slog.Attr) bool {
-		attrs = append(attrs, a)
-		return true
-	})
-	if len(groups) == 0 {
-		return attrs
+		levelAttrs[level] = append(levelAttrs[level], node.localAttrs...)
 	}
 
+	record.Attrs(func(a slog.Attr) bool {
+		levelAttrs[level] = append(levelAttrs[level], a)
+		return true
+	})
+
+	if len(groups) == 0 {
+		return levelAttrs[0]
+	}
+
+	deepest := append([]slog.Attr(nil), levelAttrs[len(groups)]...)
 	grouped := slog.Attr{
 		Key:   groups[len(groups)-1],
-		Value: slog.GroupValue(attrs...),
+		Value: slog.GroupValue(deepest...),
 	}
 	for i := len(groups) - 2; i >= 0; i-- {
+		parentLevel := append([]slog.Attr(nil), levelAttrs[i+1]...)
+		parentLevel = append(parentLevel, grouped)
 		grouped = slog.Attr{
 			Key:   groups[i],
-			Value: slog.GroupValue(grouped),
+			Value: slog.GroupValue(parentLevel...),
 		}
 	}
-	return []slog.Attr{grouped}
+
+	root := append([]slog.Attr(nil), levelAttrs[0]...)
+	root = append(root, grouped)
+	return root
 }

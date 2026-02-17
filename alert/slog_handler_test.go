@@ -98,20 +98,29 @@ func TestLogHandler_PassesWithAttrsAndGroups(t *testing.T) {
 	logger := slog.New(handler).With(slog.String("service", "rpc")).WithGroup("meta")
 	logger.Info("failed", slog.String("method", "ping"), slog.Any("error", Errorf("timeout")))
 
-	if len(gotAttrs) != 1 || gotAttrs[0].Key != "meta" {
-		t.Fatalf("expected one grouped attr with key=meta, got %+v", gotAttrs)
+	var gotService, gotMeta bool
+	var meta slog.Attr
+	for _, a := range gotAttrs {
+		if a.Key == "service" && a.Value.String() == "rpc" {
+			gotService = true
+		}
+		if a.Key == "meta" && a.Value.Kind() == slog.KindGroup {
+			gotMeta = true
+			meta = a
+		}
+	}
+	if !gotService || !gotMeta {
+		t.Fatalf("expected top-level service=rpc and meta group, got %+v", gotAttrs)
 	}
 
-	metaAttrs := gotAttrs[0].Value.Group()
-	if len(metaAttrs) < 3 {
-		t.Fatalf("expected grouped attrs to include service, method, error; got %+v", metaAttrs)
+	metaAttrs := meta.Value.Group()
+	if len(metaAttrs) < 2 {
+		t.Fatalf("expected grouped attrs to include method and error; got %+v", metaAttrs)
 	}
 
-	var gotService, gotMethod, gotError bool
+	var gotMethod, gotError bool
 	for _, a := range metaAttrs {
 		switch a.Key {
-		case "service":
-			gotService = a.Value.String() == "rpc"
 		case "method":
 			gotMethod = a.Value.String() == "ping"
 		case "error":
@@ -122,8 +131,72 @@ func TestLogHandler_PassesWithAttrsAndGroups(t *testing.T) {
 			}
 		}
 	}
-	if !gotService || !gotMethod || !gotError {
-		t.Fatalf("expected grouped attrs with service=rpc method=ping and alert error, got %+v", metaAttrs)
+	if !gotMethod || !gotError {
+		t.Fatalf("expected grouped attrs with method=ping and alert error, got %+v", metaAttrs)
+	}
+}
+
+func TestLogHandler_PreservesInterleavedWithAndGroups(t *testing.T) {
+	var gotAttrs []slog.Attr
+	handler := LogHandler(slog.NewTextHandler(io.Discard, nil), func(ctx context.Context, record slog.Record, err error) {
+		record.Attrs(func(a slog.Attr) bool {
+			gotAttrs = append(gotAttrs, a)
+			return true
+		})
+	})
+
+	logger := slog.New(handler).
+		With(slog.String("a", "A")).
+		WithGroup("g1").
+		With(slog.String("b", "B")).
+		WithGroup("g2")
+	logger.Info("failed", slog.String("c", "C"), slog.Any("error", Errorf("timeout")))
+
+	var aOK, g1OK bool
+	var g1 slog.Attr
+	for _, attr := range gotAttrs {
+		if attr.Key == "a" && attr.Value.String() == "A" {
+			aOK = true
+		}
+		if attr.Key == "g1" && attr.Value.Kind() == slog.KindGroup {
+			g1OK = true
+			g1 = attr
+		}
+	}
+	if !aOK || !g1OK {
+		t.Fatalf("expected top-level attrs a=A and g1 group, got %+v", gotAttrs)
+	}
+
+	var bOK, g2OK bool
+	var g2 slog.Attr
+	for _, attr := range g1.Value.Group() {
+		if attr.Key == "b" && attr.Value.String() == "B" {
+			bOK = true
+		}
+		if attr.Key == "g2" && attr.Value.Kind() == slog.KindGroup {
+			g2OK = true
+			g2 = attr
+		}
+	}
+	if !bOK || !g2OK {
+		t.Fatalf("expected g1 attrs to contain b=B and g2 group, got %+v", g1.Value.Group())
+	}
+
+	var cOK, errOK bool
+	for _, attr := range g2.Value.Group() {
+		switch attr.Key {
+		case "c":
+			cOK = attr.Value.String() == "C"
+		case "error":
+			e, ok := attr.Value.Any().(error)
+			if ok && e != nil {
+				var ae *alertError
+				errOK = errors.As(e, &ae)
+			}
+		}
+	}
+	if !cOK || !errOK {
+		t.Fatalf("expected g2 attrs to contain c=C and alert error, got %+v", g2.Value.Group())
 	}
 }
 
