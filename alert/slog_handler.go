@@ -41,6 +41,10 @@ func ReplaceAttr(next func(groups []string, a slog.Attr) slog.Attr, alertAttr sl
 // The callback receives the matched error and a record that includes call-site
 // attrs plus logger.With(...) / logger.WithGroup(...) context.
 //
+// IMPORTANT: treat alertFn as a side-effect hook only (Sentry, paging,
+// webhooks, metrics). Do not log with slog from inside alertFn, especially
+// alert errors, or you can trigger recursion.
+//
 // Example (simple, no dependencies):
 //
 //	slogHandler = alert.LogHandler(slogHandler, func(ctx context.Context, record slog.Record, err error) {

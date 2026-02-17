@@ -47,7 +47,7 @@ func main() {
 	handler := alert.LogHandler(baseHandler, func(ctx context.Context, record slog.Record, err error) {
 		// Send error to Sentry/PagerDuty/webhook/metrics etc.
 		// You can collect record.Attrs() and record.Source().
-		// Do not log to slog again.
+		// IMPORTANT: do NOT log with slog here (use external side effects only).
 	})
 
 	logger := slog.New(handler)
@@ -112,5 +112,5 @@ func sentryAlertHandler(base slog.Handler) slog.Handler {
 - Only errors created with `alert.Errorf(...)` trigger the alert callback.
 - The callback receives `record` + `err`; `record.Attrs(...)` includes call-site and `logger.With(...)` attrs.
 - `LevelAlert` is higher than `slog.LevelError`, so existing level filters still pass it.
-- Callback best practice: treat `alertFn` as a side-effect hook (Sentry, paging, webhooks, metrics),
-  and avoid logging alert errors with the same logger from inside the callback to prevent recursion.
+- Callback rule: treat `alertFn` as a side-effect hook (Sentry, paging, webhooks, metrics).
+- Do NOT log with slog from inside `alertFn` (especially alert errors), or you can trigger recursion.
