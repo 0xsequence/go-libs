@@ -78,7 +78,8 @@ type alertHandler struct {
 }
 
 func (h *alertHandler) Enabled(ctx context.Context, level slog.Level) bool {
-	return h.handler.Enabled(ctx, level)
+	// Final level gating happens in Handle after potential alert upgrade.
+	return true
 }
 
 // A guard to prevent infinite recursion when alertFn is misused and its function
@@ -105,6 +106,11 @@ func (h *alertHandler) Handle(ctx context.Context, record slog.Record) error {
 	})
 	if alertErr != nil {
 		record.Level = LevelAlert
+	}
+	if !h.handler.Enabled(ctx, record.Level) {
+		return nil
+	}
+	if alertErr != nil {
 		if inCallback, _ := ctx.Value(callbackContextKey{}).(bool); inCallback {
 			// Prevent infinite recursion when alertFn logs alert errors again
 			// through the same handler chain.

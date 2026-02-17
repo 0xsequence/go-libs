@@ -41,6 +41,53 @@ func TestLogHandler_UpgradesToLevelAlert(t *testing.T) {
 	}
 }
 
+func TestLogHandler_InfoAlertNotDroppedByErrorThreshold(t *testing.T) {
+	var called bool
+	var logBuf strings.Builder
+	baseHandler := slog.NewTextHandler(&logBuf, &slog.HandlerOptions{
+		Level: slog.LevelError,
+		ReplaceAttr: ReplaceAttr(
+			func(groups []string, a slog.Attr) slog.Attr { return a },
+			slog.String("severity", "ALERT"),
+		),
+	})
+	handler := LogHandler(baseHandler, func(ctx context.Context, record slog.Record, err error) {
+		called = true
+	})
+	logger := slog.New(handler)
+
+	logger.Info("failed", slog.Any("error", Errorf("timeout")))
+
+	if !called {
+		t.Fatal("expected alert callback to be called for info-level alert error")
+	}
+	logOut := logBuf.String()
+	if !strings.Contains(logOut, "ALERT") {
+		t.Errorf("expected log to contain severity=ALERT, got %q", logOut)
+	}
+}
+
+func TestLogHandler_InfoNonAlertFilteredByErrorThreshold(t *testing.T) {
+	var called bool
+	var logBuf strings.Builder
+	baseHandler := slog.NewTextHandler(&logBuf, &slog.HandlerOptions{
+		Level: slog.LevelError,
+	})
+	handler := LogHandler(baseHandler, func(ctx context.Context, record slog.Record, err error) {
+		called = true
+	})
+	logger := slog.New(handler)
+
+	logger.Info("not-alert", slog.Any("error", fmt.Errorf("plain error")))
+
+	if called {
+		t.Fatal("expected alert callback not to be called for non-alert error")
+	}
+	if got := logBuf.String(); got != "" {
+		t.Errorf("expected non-alert info log to be filtered out, got %q", got)
+	}
+}
+
 func TestErrorf_CapturesStackFrames(t *testing.T) {
 	err := Errorf("test error")
 	var ae *alertError
