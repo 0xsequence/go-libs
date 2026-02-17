@@ -45,8 +45,9 @@ func main() {
 	})
 
 	handler := alert.LogHandler(baseHandler, func(ctx context.Context, record slog.Record, err error) {
-		// Send to pager/Sentry/etc. You also get record.Source() when AddSource is enabled.
-		slog.Default().WarnContext(ctx, "alert callback triggered", slog.Any("error", err))
+		// Send error to Sentry/PagerDuty/webhook/metrics etc.
+		// You can collect record.Attrs() and record.Source().
+		// Do not log to slog again.
 	})
 
 	logger := slog.New(handler)
@@ -69,8 +70,7 @@ Examples:
 ## Sentry example (forward `error` + attrs)
 
 This is possible with the current `LogHandler` callback. The callback receives the matched
-alert error (`err`) and the full `slog.Record`, so you can send the exception and attach
-context from the record attrs.
+`error` and a `slog.Record` whose attrs include call-site attrs and `logger.With(...)` context.
 
 ```go
 import (
@@ -80,30 +80,24 @@ import (
 
 	"github.com/0xsequence/go-libs/alert"
 	"github.com/getsentry/sentry-go"
+	"github.com/go-chi/traceid"
 )
 
 func sentryAlertHandler(base slog.Handler) slog.Handler {
 	return alert.LogHandler(base, func(ctx context.Context, record slog.Record, err error) {
 		sentry.WithScope(func(scope *sentry.Scope) {
-			// Primary exception payload (the matched "error" attr from alert.Errorf).
-			scope.SetContext("alert", map[string]any{
-				"message": record.Message,
-				"level":   record.Level.String(),
+			scope.SetContext(record.Message, map[string]any{
+				"level":   "alert",
+				"traceId": traceid.FromContext(ctx),
 			})
 
-			// Add caller info when AddSource is enabled.
 			if source := record.Source(); source != nil {
-				scope.SetTag("log.file", source.File)
-				scope.SetTag("log.func", source.Function)
-				scope.SetTag("log.line", fmt.Sprintf("%d", source.Line))
+				scope.SetTag("file_line", fmt.Sprintf("%s:%d", source.File, source.Line))
+				scope.SetTag("func", source.Function)
 			}
 
-			// Attach remaining attrs as Sentry extras.
 			record.Attrs(func(a slog.Attr) bool {
-				if a.Key == "error" {
-					return true // already captured as exception payload
-				}
-				scope.SetExtra(a.Key, a.Value.String())
+				scope.SetTag(a.Key, a.Value.String())
 				return true
 			})
 
@@ -116,5 +110,7 @@ func sentryAlertHandler(base slog.Handler) slog.Handler {
 ## Operational notes
 
 - Only errors created with `alert.Errorf(...)` trigger the alert callback.
-- `LogHandler` preserves record attributes and source information.
+- The callback receives `record` + `err`; `record.Attrs(...)` includes call-site and `logger.With(...)` attrs.
 - `LevelAlert` is higher than `slog.LevelError`, so existing level filters still pass it.
+- Callback best practice: treat `alertFn` as a side-effect hook (Sentry, paging, webhooks, metrics),
+  and avoid logging alert errors with the same logger from inside the callback to prevent recursion.

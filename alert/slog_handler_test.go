@@ -1,6 +1,7 @@
 package alert
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -82,5 +83,41 @@ func TestLogHandler_DoesNotTriggerOnRegularError(t *testing.T) {
 	logger.Error("failed", slog.Any("error", fmt.Errorf("plain error")))
 	if called {
 		t.Error("expected no alert callback for regular error")
+	}
+}
+
+func TestLogHandler_PassesWithAttrsAndGroups(t *testing.T) {
+	var gotAttrs []slog.Attr
+	handler := LogHandler(slog.NewTextHandler(io.Discard, nil), func(ctx context.Context, record slog.Record, err error) {
+		record.Attrs(func(a slog.Attr) bool {
+			gotAttrs = append(gotAttrs, a)
+			return true
+		})
+	})
+
+	logger := slog.New(handler).With(slog.String("service", "rpc")).WithGroup("meta")
+	logger.Info("failed", slog.Any("error", Errorf("timeout")))
+
+	if len(gotAttrs) != 1 || gotAttrs[0].Key != "meta" {
+		t.Fatalf("expected one grouped attr with key=meta, got %+v", gotAttrs)
+	}
+}
+
+func TestLogHandler_PreventsRecursiveCallback(t *testing.T) {
+	var callbackCalls int
+	var out bytes.Buffer
+
+	var logger *slog.Logger
+	handler := LogHandler(slog.NewTextHandler(&out, nil), func(ctx context.Context, record slog.Record, err error) {
+		callbackCalls++
+		// Re-log the same alert error from inside callback.
+		logger.ErrorContext(ctx, "callback relog", slog.Any("error", err))
+	})
+	logger = slog.New(handler)
+
+	logger.ErrorContext(context.Background(), "root alert", slog.Any("error", Errorf("timeout")))
+
+	if callbackCalls != 1 {
+		t.Fatalf("expected callback to be called once, got %d", callbackCalls)
 	}
 }

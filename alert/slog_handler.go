@@ -10,6 +10,8 @@ import (
 // LevelError (8), so handlers with Level >= LevelError will pass it through.
 const LevelAlert = slog.Level(16)
 
+type callbackContextKey struct{}
+
 // ReplaceAttr wraps a ReplaceAttr function to map LevelAlert to a caller-
 // provided attr. This keeps alert semantics in this package while letting callers
 // pick sink-specific fields/values (for example, GCP severity).
@@ -38,33 +40,22 @@ func ReplaceAttr(next func(groups []string, a slog.Attr) slog.Attr, alertAttr sl
 // the next handler, so GCP receives severity="ALERT" and level filters treat it
 // as >= ERROR. Use ReplaceAttr to map LevelAlert to sink-specific attrs.
 //
-// The callback receives the context, the full record (including record.Source()
-// for the slog caller's file/line when AddSource is enabled), and the matched error.
+// The callback receives the matched error and a record that includes call-site
+// attrs plus logger.With(...) / logger.WithGroup(...) context.
 //
 // Example (simple, no dependencies):
 //
 //	slogHandler = alert.LogHandler(slogHandler, func(ctx context.Context, record slog.Record, err error) {
-//	    if source := record.Source(); source != nil {
-//	        fmt.Printf("ALERT %s:%d: %v\n", source.File, source.Line, err)
-//	    } else {
-//	        fmt.Printf("ALERT: %v\n", err)
-//	    }
+//	    record.Attrs(func(a slog.Attr) bool {
+//	        fmt.Println(a.Key, a.Value.String())
+//	        return true
+//	    })
 //	})
 //
 // Example (Sentry, capturing the slog caller as the exception location):
 //
 //	slogHandler = alert.LogHandler(slogHandler, func(ctx context.Context, record slog.Record, err error) {
-//	    sentry.WithScope(func(scope *sentry.Scope) {
-//	        if source := record.Source(); source != nil {
-//	            scope.SetTag("log_caller", fmt.Sprintf("%s:%d", source.File, source.Line))
-//	            scope.SetExtra("log_source", map[string]any{
-//	                "file":     source.File,
-//	                "line":     source.Line,
-//	                "function": source.Function,
-//	            })
-//	        }
-//	        sentry.CaptureException(err)
-//	    })
+//	    sentry.CaptureException(err)
 //	})
 func LogHandler(handler slog.Handler, alertFn func(ctx context.Context, record slog.Record, err error)) slog.Handler {
 	return &alertHandler{
@@ -74,8 +65,11 @@ func LogHandler(handler slog.Handler, alertFn func(ctx context.Context, record s
 }
 
 type alertHandler struct {
-	handler slog.Handler
-	alertFn func(ctx context.Context, record slog.Record, err error)
+	handler    slog.Handler
+	alertFn    func(ctx context.Context, record slog.Record, err error)
+	parent     *alertHandler
+	localAttrs []slog.Attr
+	localGroup string
 }
 
 func (h *alertHandler) Enabled(ctx context.Context, level slog.Level) bool {
@@ -102,16 +96,74 @@ func (h *alertHandler) Handle(ctx context.Context, record slog.Record) error {
 	})
 	if alertErr != nil {
 		record.Level = LevelAlert
-		h.alertFn(ctx, record, alertErr)
+		if inCallback, _ := ctx.Value(callbackContextKey{}).(bool); inCallback {
+			// Prevent infinite recursion when alertFn logs alert errors again
+			// through the same handler chain.
+			return h.handler.Handle(ctx, record) //nolint:wrapcheck
+		}
+		callbackRecord := slog.NewRecord(record.Time, record.Level, record.Message, record.PC)
+		callbackRecord.AddAttrs(h.buildAttrs(record)...)
+		callbackCtx := context.WithValue(ctx, callbackContextKey{}, true)
+		h.alertFn(callbackCtx, callbackRecord, alertErr)
 		return h.handler.Handle(ctx, record) //nolint:wrapcheck
 	}
 	return h.handler.Handle(ctx, record) //nolint:wrapcheck
 }
 
 func (h *alertHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &alertHandler{handler: h.handler.WithAttrs(attrs), alertFn: h.alertFn}
+	localAttrs := append([]slog.Attr(nil), attrs...)
+	return &alertHandler{
+		handler:    h.handler.WithAttrs(attrs),
+		alertFn:    h.alertFn,
+		parent:     h,
+		localAttrs: localAttrs,
+	}
 }
 
 func (h *alertHandler) WithGroup(name string) slog.Handler {
-	return &alertHandler{handler: h.handler.WithGroup(name), alertFn: h.alertFn}
+	return &alertHandler{
+		handler:    h.handler.WithGroup(name),
+		alertFn:    h.alertFn,
+		parent:     h,
+		localGroup: name,
+	}
+}
+
+// buildAttrs flattens logger.With(...) attrs from the parent chain and
+// appends the current record attrs. If WithGroup was used, the final attrs are
+// wrapped into nested slog groups in the same order they were applied.
+func (h *alertHandler) buildAttrs(record slog.Record) []slog.Attr {
+	var chain []*alertHandler
+	for cur := h; cur != nil; cur = cur.parent {
+		chain = append(chain, cur)
+	}
+
+	var groups []string
+	var attrs []slog.Attr
+	for i := len(chain) - 1; i >= 0; i-- {
+		node := chain[i]
+		if node.localGroup != "" {
+			groups = append(groups, node.localGroup)
+		}
+		attrs = append(attrs, node.localAttrs...)
+	}
+	record.Attrs(func(a slog.Attr) bool {
+		attrs = append(attrs, a)
+		return true
+	})
+	if len(groups) == 0 {
+		return attrs
+	}
+
+	grouped := slog.Attr{
+		Key:   groups[len(groups)-1],
+		Value: slog.GroupValue(attrs...),
+	}
+	for i := len(groups) - 2; i >= 0; i-- {
+		grouped = slog.Attr{
+			Key:   groups[i],
+			Value: slog.GroupValue(grouped),
+		}
+	}
+	return []slog.Attr{grouped}
 }
