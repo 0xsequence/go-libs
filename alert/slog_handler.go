@@ -10,8 +10,6 @@ import (
 // LevelError (8), so handlers with Level >= LevelError will pass it through.
 const LevelAlert = slog.Level(16)
 
-type callbackContextKey struct{}
-
 // ReplaceAttr wraps a ReplaceAttr function to map LevelAlert to a caller-
 // provided attr. This keeps alert semantics in this package while letting callers
 // pick sink-specific fields/values (for example, GCP severity).
@@ -58,6 +56,9 @@ func ReplaceAttr(next func(groups []string, a slog.Attr) slog.Attr, alertAttr sl
 //	    sentry.CaptureException(err)
 //	})
 func LogHandler(handler slog.Handler, alertFn func(ctx context.Context, record slog.Record, err error)) slog.Handler {
+	if alertFn == nil {
+		panic("alert.LogHandler: alertFn is required")
+	}
 	return &alertHandler{
 		handler: handler,
 		alertFn: alertFn,
@@ -75,6 +76,10 @@ type alertHandler struct {
 func (h *alertHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return h.handler.Enabled(ctx, level)
 }
+
+// A guard to prevent infinite recursion when alertFn is misused and its function
+// body logs alert errors again through the same handler chain.
+type callbackContextKey struct{}
 
 func (h *alertHandler) Handle(ctx context.Context, record slog.Record) error {
 	var alertErr error

@@ -96,10 +96,34 @@ func TestLogHandler_PassesWithAttrsAndGroups(t *testing.T) {
 	})
 
 	logger := slog.New(handler).With(slog.String("service", "rpc")).WithGroup("meta")
-	logger.Info("failed", slog.Any("error", Errorf("timeout")))
+	logger.Info("failed", slog.String("method", "ping"), slog.Any("error", Errorf("timeout")))
 
 	if len(gotAttrs) != 1 || gotAttrs[0].Key != "meta" {
 		t.Fatalf("expected one grouped attr with key=meta, got %+v", gotAttrs)
+	}
+
+	metaAttrs := gotAttrs[0].Value.Group()
+	if len(metaAttrs) < 3 {
+		t.Fatalf("expected grouped attrs to include service, method, error; got %+v", metaAttrs)
+	}
+
+	var gotService, gotMethod, gotError bool
+	for _, a := range metaAttrs {
+		switch a.Key {
+		case "service":
+			gotService = a.Value.String() == "rpc"
+		case "method":
+			gotMethod = a.Value.String() == "ping"
+		case "error":
+			e, ok := a.Value.Any().(error)
+			if ok && e != nil {
+				var ae *alertError
+				gotError = errors.As(e, &ae)
+			}
+		}
+	}
+	if !gotService || !gotMethod || !gotError {
+		t.Fatalf("expected grouped attrs with service=rpc method=ping and alert error, got %+v", metaAttrs)
 	}
 }
 
@@ -120,4 +144,13 @@ func TestLogHandler_PreventsRecursiveCallback(t *testing.T) {
 	if callbackCalls != 1 {
 		t.Fatalf("expected callback to be called once, got %d", callbackCalls)
 	}
+}
+
+func TestLogHandler_PanicsOnNilCallback(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("expected panic when alertFn is nil")
+		}
+	}()
+	_ = LogHandler(slog.NewTextHandler(io.Discard, nil), nil)
 }
