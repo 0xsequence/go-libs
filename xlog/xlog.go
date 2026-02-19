@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+
+	"github.com/0xsequence/go-libs/alert"
 )
 
 // slog.Any("error", err)
@@ -17,6 +19,11 @@ func Error(err error) slog.Attr {
 // slog.Any("error", fmt.Errorf(format, args...))
 func Errorf(format string, args ...any) slog.Attr {
 	return slog.Any("error", fmt.Errorf(format, args...))
+}
+
+// slog.Any("error", alert.Error(err))
+func Alert(err error) slog.Attr {
+	return slog.Any("error", alert.ErrorSkip(2, err))
 }
 
 // slog.Uint64("id", ID)
