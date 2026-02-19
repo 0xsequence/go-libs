@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/test-go/testify/assert"
@@ -27,6 +29,50 @@ func TestErrorf(t *testing.T) {
 
 	assert.Equal(t, "error", attr.Key)
 	assert.Equal(t, fmt.Sprintf(format, args...), attr.Value.String())
+}
+
+//go:noinline
+func makeAlertAttr(err error) any {
+	return xlog.Alert(err).Value.Any()
+}
+
+func TestAlert(t *testing.T) {
+	baseErr := errors.New("sample alert error")
+	value := makeAlertAttr(baseErr)
+	alertErr, ok := value.(error)
+	if !ok {
+		t.Fatalf("expected error value, got %T", value)
+	}
+
+	assert.Equal(t, "sample alert error", alertErr.Error())
+
+	type stackFramer interface {
+		StackFrames() []uintptr
+	}
+	sf, ok := alertErr.(stackFramer)
+	if !ok {
+		t.Fatalf("expected alert error to expose stack frames, got %T", alertErr)
+	}
+
+	frames := sf.StackFrames()
+	resolved := runtime.CallersFrames(frames)
+	var firstFunc string
+	for {
+		frame, more := resolved.Next()
+		if frame.Function != "" {
+			firstFunc = frame.Function
+			break
+		}
+		if !more {
+			break
+		}
+	}
+	if firstFunc == "" {
+		t.Fatal("expected at least one resolved stack frame")
+	}
+	if strings.Contains(firstFunc, "xlog.Alert") {
+		t.Fatalf("expected caller frame, got wrapper frame: %q", firstFunc)
+	}
 }
 
 func TestID(t *testing.T) {

@@ -107,6 +107,12 @@ func sentryAlertHandler(base slog.Handler) slog.Handler {
 }
 ```
 
+## Error helpers
+
+- `alert.Errorf(format, args...)`: create a new alert error with a formatted message.
+- `alert.Error(err)`: wrap an existing error as an alert error.
+- `alert.ErrorSkip(skip, err)`: advanced helper for wrapper packages that need caller-accurate stack frames (for example, `xlog.Alert`-style helpers).
+
 ## Operational notes
 
 - Only errors created with `alert.Errorf(...)` trigger the alert callback.

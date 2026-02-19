@@ -8,9 +8,26 @@ import (
 // Errorf creates a new error with a stack trace that triggers
 // an alert when logged via alert.LogHandler.
 func Errorf(format string, args ...any) error {
-	err := &alertError{err: fmt.Errorf(format, args...)}
-	runtime.Callers(1, err.frame.frames[:])
-	return err
+	return newAlertError(1, fmt.Errorf(format, args...))
+}
+
+// Error wraps an existing error with alert semantics and captures
+// a stack trace at the call site.
+func Error(err error) error {
+	return newAlertError(1, err)
+}
+
+// ErrorSkip wraps an existing error with alert semantics and captures
+// stack frames while skipping additional caller frames.
+// Use this when creating helper wrappers in another package.
+func ErrorSkip(skip int, err error) error {
+	return newAlertError(1+skip, err)
+}
+
+func newAlertError(skip int, err error) error {
+	alertErr := &alertError{err: err}
+	runtime.Callers(1+skip, alertErr.frame.frames[:])
+	return alertErr
 }
 
 // alertError triggers alerts when logged.
