@@ -26,6 +26,11 @@ func Alert(err error) slog.Attr {
 	return slog.Any("error", alert.ErrorSkip(2, err))
 }
 
+// slog.Any("error", alert.Errorf(format, args...)))
+func Alertf(format string, args ...any) slog.Attr {
+	return slog.Any("error", alert.ErrorSkip(2, fmt.Errorf(format, args...)))
+}
+
 // slog.Uint64("id", ID)
 func ID(ID uint64) slog.Attr {
 	return slog.Uint64("id", ID)

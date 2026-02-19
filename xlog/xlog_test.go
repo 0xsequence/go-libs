@@ -36,22 +36,20 @@ func makeAlertAttr(err error) any {
 	return xlog.Alert(err).Value.Any()
 }
 
-func TestAlert(t *testing.T) {
-	baseErr := errors.New("sample alert error")
-	value := makeAlertAttr(baseErr)
-	alertErr, ok := value.(error)
-	if !ok {
-		t.Fatalf("expected error value, got %T", value)
-	}
+//go:noinline
+func makeAlertfAttr(format string, args ...any) any {
+	return xlog.Alertf(format, args...).Value.Any()
+}
 
-	assert.Equal(t, "sample alert error", alertErr.Error())
+func assertCallerNotWrapper(t *testing.T, err error, wrapper string) {
+	t.Helper()
 
 	type stackFramer interface {
 		StackFrames() []uintptr
 	}
-	sf, ok := alertErr.(stackFramer)
+	sf, ok := err.(stackFramer)
 	if !ok {
-		t.Fatalf("expected alert error to expose stack frames, got %T", alertErr)
+		t.Fatalf("expected alert error to expose stack frames, got %T", err)
 	}
 
 	frames := sf.StackFrames()
@@ -70,9 +68,34 @@ func TestAlert(t *testing.T) {
 	if firstFunc == "" {
 		t.Fatal("expected at least one resolved stack frame")
 	}
-	if strings.Contains(firstFunc, "xlog.Alert") {
+	if strings.Contains(firstFunc, wrapper) {
 		t.Fatalf("expected caller frame, got wrapper frame: %q", firstFunc)
 	}
+}
+
+func TestAlert(t *testing.T) {
+	baseErr := errors.New("sample alert error")
+	value := makeAlertAttr(baseErr)
+	alertErr, ok := value.(error)
+	if !ok {
+		t.Fatalf("expected error value, got %T", value)
+	}
+
+	assert.Equal(t, "sample alert error", alertErr.Error())
+	assertCallerNotWrapper(t, alertErr, "xlog.Alert")
+}
+
+func TestAlertf(t *testing.T) {
+	format := "sample alert error %s"
+	args := []any{"formatted"}
+	value := makeAlertfAttr(format, args...)
+	alertErr, ok := value.(error)
+	if !ok {
+		t.Fatalf("expected error value, got %T", value)
+	}
+
+	assert.Equal(t, fmt.Sprintf(format, args...), alertErr.Error())
+	assertCallerNotWrapper(t, alertErr, "xlog.Alertf")
 }
 
 func TestID(t *testing.T) {
