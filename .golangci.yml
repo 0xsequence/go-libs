@@ -30,6 +30,11 @@ linters:
       - linters:
           - lll
         source: '^//go:generate '
+      # Tests wrap an enabled handler; slog.DiscardHandler reports itself disabled.
+      - path: _test\.go
+        linters:
+          - sloglint
+        text: slog.DiscardHandler
     paths:
       - .*\.gen\.go$
       - .*\.ridl$
